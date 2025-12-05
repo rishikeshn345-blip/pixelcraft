@@ -1,0 +1,91 @@
+:root{
+  --bg1:#071023;
+  --bg2:#0b0f1a;
+  --text:#e6eef8;
+  --muted:#94a3b8;
+  --accent:#7c3aed;
+}
+
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  background:linear-gradient(180deg,var(--bg1),var(--bg2));
+  color:var(--text);
+  font-family:Inter,system-ui;
+  overflow-x:hidden;
+}
+
+.webgl{
+  position:fixed;inset:0;width:100%;height:100%;pointer-events:none;
+  z-index:0;
+}
+
+.nav{
+  position:fixed;top:16px;left:16px;z-index:50;
+  display:flex;align-items:center;gap:12px;
+  background:rgba(255,255,255,0.04);
+  backdrop-filter:blur(6px);
+  padding:8px 12px;
+  border-radius:12px;
+}
+.brand{display:flex;align-items:center;gap:10px}
+.logo{
+  width:40px;height:40px;background:var(--accent);
+  display:flex;align-items:center;justify-content:center;
+  border-radius:10px;font-weight:700;color:white;
+}
+.info small{color:var(--muted);font-size:12px}
+
+.links{display:none;gap:10px}
+.links a{
+  color:var(--muted);text-decoration:none;padding:6px 8px;
+  font-weight:600;border-radius:8px;font-size:14px;
+}
+.links a:hover{color:white;}
+
+.hamburger{
+  width:40px;height:40px;border-radius:10px;
+  background:rgba(255,255,255,0.04);
+  display:flex;flex-direction:column;justify-content:center;
+  gap:5px;cursor:pointer;border:1px solid rgba(255,255,255,0.1);
+}
+.hamburger span{
+  width:20px;height:2px;background:white;border-radius:2px;
+}
+
+.wrap{
+  position:relative;z-index:5;padding:60px 20px;
+  max-width:900px;margin:0 auto;
+}
+
+.section{
+  min-height:100vh;padding:80px 0;
+}
+.title{font-size:clamp(32px,6vw,60px);margin-bottom:10px}
+.subtitle{color:var(--muted);font-size:18px}
+
+.projects-grid{
+  margin-top:20px;
+  display:grid;grid-template-columns:1fr;gap:15px;
+}
+.card{
+  background:rgba(255,255,255,0.05);
+  padding:16px;border-radius:12px;
+}
+
+.contact-form{display:flex;flex-direction:column;gap:10px;margin-top:20px}
+.contact-form input,.contact-form textarea{
+  background:transparent;border:1px solid rgba(255,255,255,0.1);
+  padding:10px;border-radius:10px;color:white;
+}
+.btn{
+  background:var(--accent);padding:10px;border-radius:10px;border:none;
+  color:white;font-weight:700;cursor:pointer;
+}
+
+footer{text-align:center;padding:40px;color:var(--muted)}
+
+@media(min-width:900px){
+  .links{display:flex}
+  .hamburger{display:none}
+  .projects-grid{grid-template-columns:repeat(2,1fr)}
+}
