@@ -1,11 +1,3 @@
-<!--
-Student Budget Home Dashboard - single-file HTML
-How to edit initial data (top of script):
-  - Set the user's first name: `const USER_FIRST_NAME = "Alex";`
-  - Set the monthly budget amount: `const MONTHLY_BUDGET = 1200;`
-  - Edit the initial sample transactions array `INITIAL_TRANSACTIONS = [...]`
-This file is self-contained (HTML + CSS + vanilla JS). Open in a browser.
--->
 <!doctype html>
 <html lang="en">
 <head>
@@ -13,250 +5,201 @@ This file is self-contained (HTML + CSS + vanilla JS). Open in a browser.
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Student Budget — Home</title>
   <meta name="description" content="Minimal student-friendly budgeting dashboard (single-file, responsive, accessible)" />
+
+  <!-- ===== Updated professional stylesheet (paste in place of previous style) ===== -->
   <style>
-    /* ===========================
-       CSS VARIABLES (theme & spacing)
-       Edit these to tweak colors, spacing, radii, shadows, breakpoints
-       =========================== */
-    :root{
-      --bg: #f7f7f9;
-      --card: #ffffff;
-      --muted: #6b7280;
-      --accent: #7dd3fc; /* pastel cyan */
-      --accent-2: #c7b8ff; /* pastel purple */
-      --success: #10b981;
-      --danger: #ef4444;
-      --glass: rgba(255,255,255,0.6);
-      --radius-sm: 10px;
-      --radius: 14px;
-      --radius-lg: 20px;
-      --shadow-sm: 0 1px 2px rgba(16,24,40,0.04);
-      --shadow: 0 6px 18px rgba(16,24,40,0.08);
-      --container-max: 1100px;
-      --gap: 16px;
-      --gutter: 18px;
-      --fw-system: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      --bp-desktop: 900px;
-      --accent-gradient: linear-gradient(135deg,var(--accent),var(--accent-2));
-    }
+  /* Professional, clean theme for Student Budget Dashboard
+     This style replaces the previous <style> block.
+  */
 
-    /* ====== Base ====== */
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0;
-      font-family:var(--fw-system);
-      background:linear-gradient(180deg,#fbfdff 0%, var(--bg) 100%);
-      color:#111827;
-      -webkit-font-smoothing:antialiased;
-      -moz-osx-font-smoothing:grayscale;
-      line-height:1.35;
-      padding:24px;
-    }
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
 
-    /* ====== Layout container (mobile-first) ====== */
-    .app-wrap{
-      max-width:100%;
-      margin:0 auto;
-      display:flex;
-      flex-direction:column;
-      gap:var(--gap);
-      align-items:stretch;
-    }
+  :root{
+    --bg:#f6f8fb;
+    --card:#ffffff;
+    --muted:#6b7280;
+    --text:#0f172a;
+    --accent: #6B4EFF;         /* primary purple */
+    --accent-2: #FFB443;       /* accent orange */
+    --accent-gradient: linear-gradient(135deg, var(--accent), #8A66FF);
+    --success:#10b981;
+    --danger:#ef4444;
+    --glass: rgba(255,255,255,0.7);
+    --radius-sm:10px;
+    --radius:14px;
+    --radius-lg:20px;
+    --shadow-xs: 0 2px 6px rgba(15,23,42,0.04);
+    --shadow-sm: 0 8px 20px rgba(15,23,42,0.06);
+    --shadow-lg: 0 18px 50px rgba(15,23,42,0.09);
+    --container-max:1100px;
+    --gap:16px;
+    --bp-desktop:900px;
+    --glass-border: rgba(99,85,255,0.06);
+  }
 
-    /* center content on wide screens with a fixed-width card */
-    @media(min-width:var(--bp-desktop)){
-      .app-wrap{
-        max-width:var(--container-max);
-        align-items:center;
-      }
-      .app{
-        display:grid;
-        grid-template-columns: 1fr 360px;
-        gap:28px;
-        width:100%;
-      }
-    }
+  /* Base */
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    font-family: 'Inter', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+    color:var(--text);
+    background: linear-gradient(180deg,#fbfdff 0%, var(--bg) 100%);
+    padding:24px;
+    line-height:1.38;
+    -webkit-tap-highlight-color: transparent;
+  }
 
-    /* the visual card that holds content on mobile -> fills width */
-    .card{
-      background:var(--card);
-      border-radius:var(--radius);
-      box-shadow:var(--shadow);
-      padding:16px;
-    }
+  /* App wrapper */
+  .app-wrap{
+    max-width:100%;
+    margin:0 auto;
+    display:flex;
+    flex-direction:column;
+    gap:var(--gap);
+    align-items:stretch;
+    padding-bottom:24px;
+  }
+  @media(min-width:var(--bp-desktop)){
+    .app-wrap{max-width:var(--container-max);align-items:center}
+    .app{display:grid;grid-template-columns:1fr 360px;gap:28px;width:100%}
+  }
 
-    /* Top header */
-    header.header{
-      display:flex;
-      align-items:center;
-      gap:12px;
-      justify-content:space-between;
-      padding:10px 12px;
-      background:linear-gradient(180deg, rgba(255,255,255,0.6), rgba(255,255,255,0.5));
-      border-radius:var(--radius);
-      box-shadow:var(--shadow-sm);
-    }
-    .header .left, .header .center, .header .right{display:flex;align-items:center;gap:10px}
-    .menu-btn{
-      background:transparent;
-      border:0;
-      padding:8px;
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      border-radius:10px;
-    }
-    .menu-btn:focus{outline:3px solid rgba(125,211,252,0.28); outline-offset:2px}
-    .greeting{font-weight:600;font-size:1rem}
-    .avatar{
-      width:40px;height:40px;border-radius:999px;display:inline-grid;place-items:center;
-      background:var(--accent-2); color:#fff; font-weight:700;
-      box-shadow:var(--shadow-sm);
-      font-size:0.95rem;
-    }
+  /* Card */
+  .card{
+    background:var(--card);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow-sm);
+    padding:16px;
+    border:1px solid var(--glass-border);
+  }
 
-    /* Monthly budget prominent card */
-    .budget-card{
-      display:flex;
-      gap:14px;
-      align-items:center;
-      padding:16px;
-      border-radius:var(--radius);
-      background:linear-gradient(180deg, rgba(247,250,252,0.9), rgba(255,255,255,0.85));
-      box-shadow:var(--shadow);
-    }
-    .budget-left{flex:0 0 110px; display:flex;align-items:center;justify-content:center}
-    .budget-main{flex:1; min-width:0}
-    .budget-title{font-size:0.9rem;color:var(--muted)}
-    .budget-amount{font-size:1.5rem;font-weight:700;margin-top:6px}
-    .budget-sub{font-size:0.85rem;color:var(--muted);margin-top:8px}
+  /* Header */
+  .header{
+    display:flex;align-items:center;gap:12px;justify-content:space-between;
+    padding:12px;border-radius:var(--radius);background:linear-gradient(180deg, rgba(255,255,255,0.7), rgba(255,255,255,0.6));
+    box-shadow:var(--shadow-xs);
+  }
+  .menu-btn{
+    background:transparent;border:0;padding:8px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;
+    transition:background .15s ease, transform .08s ease;
+  }
+  .menu-btn:hover{background:rgba(107,78,255,0.06);}
+  .menu-btn:active{transform:translateY(1px)}
+  .greeting{font-weight:600;font-size:1rem;color:var(--text)}
+  .avatar{
+    width:44px;height:44px;border-radius:999px;display:inline-grid;place-items:center;
+    background:linear-gradient(180deg,#e9e5ff,#cfc5ff); color:#2b1b5a; font-weight:700;
+    box-shadow:var(--shadow-xs); font-size:0.95rem;
+  }
 
-    /* circular progress */
-    .progress-wrap{width:96px;height:96px}
-    svg.progress{transform:rotate(-90deg);width:100%;height:100%}
-    .progress-bg{stroke:#eef2f7;stroke-width:12;fill:none}
-    .progress-fg{stroke:var(--accent-2);stroke-width:12;stroke-linecap:round;fill:none;transition:stroke-dashoffset 900ms cubic-bezier(.22,.9,.23,1), stroke 400ms}
+  /* Budget card */
+  .budget-card{
+    display:flex;gap:18px;align-items:center;padding:18px;border-radius:var(--radius);background:linear-gradient(180deg, rgba(255,255,255,0.96), rgba(250,250,252,0.98));
+    box-shadow:var(--shadow-lg);
+  }
+  .budget-left{flex:0 0 104px;display:flex;align-items:center;justify-content:center;}
+  .budget-main{flex:1;min-width:0}
+  .budget-title{font-size:0.9rem;color:var(--muted);letter-spacing:0.1px}
+  .budget-amount{font-size:1.6rem;font-weight:700;margin-top:6px;color:var(--text)}
+  .budget-sub{font-size:0.9rem;color:var(--muted);margin-top:8px}
 
-    .percent-label{font-weight:700;font-size:1.05rem; text-align:center; margin-top:6px}
+  /* Circular progress */
+  .progress-wrap{width:96px;height:96px;display:grid;place-items:center}
+  svg.progress{transform:rotate(-90deg);width:100%;height:100%}
+  .progress-bg{stroke:#eef2f7;stroke-width:12;fill:none}
+  .progress-fg{stroke:var(--accent);stroke-width:12;stroke-linecap:round;fill:none;transition:stroke-dashoffset 900ms cubic-bezier(.22,.9,.23,1), stroke 300ms}
 
-    /* Quick stats row */
-    .quick-row{display:flex;gap:12px;overflow:auto;padding-bottom:2px}
-    .quick-card{
-      min-width:140px; flex:0 0 auto; border-radius:12px; padding:12px;
-      background:linear-gradient(180deg, rgba(255,255,255,0.9), rgba(250,250,252,0.9));
-      box-shadow:var(--shadow-sm);
-    }
-    .quick-title{font-size:0.82rem;color:var(--muted)}
-    .quick-value{font-weight:700;margin-top:8px;font-size:1.05rem}
+  /* Percent label centered under the circle */
+  .percent-label{font-weight:700;font-size:0.95rem;text-align:center;margin-top:8px;color:var(--text)}
 
-    /* Transactions list */
-    .transactions{
-      display:flex;
-      flex-direction:column;
-      gap:6px;
-      margin-top:6px;
-    }
-    .tx{
-      display:flex;
-      align-items:center;
-      gap:12px;
-      padding:10px;
-      border-radius:12px;
-      background:transparent;
-      transition:background 180ms, transform 180ms;
-      cursor:pointer;
-      border:1px solid transparent;
-    }
-    .tx:focus, .tx:hover{background:rgba(15,23,42,0.03); transform:translateY(-2px); outline:none; border-color:rgba(0,0,0,0.03)}
-    .tx-icon{
-      width:44px;height:44px;border-radius:999px;display:grid;place-items:center;font-size:18px;
-      flex:0 0 44px;
-    }
-    .tx-meta{flex:1; min-width:0}
-    .tx-title{font-weight:600;font-size:0.95rem;white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
-    .tx-sub{font-size:0.82rem;color:var(--muted);margin-top:4px}
-    .tx-amt{font-weight:700; white-space:nowrap; margin-left:8px}
+  /* Quick stats row */
+  .quick-row{display:flex;gap:12px;overflow:auto;padding-bottom:2px;margin-top:12px}
+  .quick-card{
+    min-width:150px;flex:0 0 auto;border-radius:12px;padding:12px;
+    background:linear-gradient(180deg, rgba(255,255,255,0.9), rgba(250,250,252,0.9));
+    box-shadow:var(--shadow-xs);border:1px solid rgba(15,23,42,0.02);
+  }
+  .quick-title{font-size:0.82rem;color:var(--muted)}
+  .quick-value{font-weight:700;margin-top:8px;font-size:1.05rem;color:var(--text)}
 
-    .tx-sep{height:1px;background:transparent;margin:6px 0}
+  /* Transactions */
+  .transactions{display:flex;flex-direction:column;gap:8px;margin-top:6px}
+  .tx{
+    display:flex;align-items:center;gap:12px;padding:12px;border-radius:12px;background:linear-gradient(180deg, rgba(255,255,255,0.6), rgba(250,250,252,0.6));
+    border:1px solid rgba(15,23,42,0.02);
+    transition:transform .18s ease, box-shadow .18s ease, background .18s ease;
+    cursor:pointer;
+  }
+  .tx:hover{transform:translateY(-6px);box-shadow:0 14px 40px rgba(15,23,42,0.06)}
+  .tx:focus{outline:3px solid rgba(107,78,255,0.12);outline-offset:3px}
+  .tx-icon{width:48px;height:48px;border-radius:12px;display:grid;place-items:center;font-size:18px;flex:0 0 48px;border:1px solid rgba(15,23,42,0.03)}
+  .tx-meta{flex:1;min-width:0}
+  .tx-title{font-weight:600;font-size:0.96rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tx-sub{font-size:0.83rem;color:var(--muted);margin-top:6px}
+  .tx-amt{font-weight:700;white-space:nowrap;margin-left:8px}
 
-    /* FAB (floating action button) */
-    .fab{
-      position:fixed;
-      right:20px;
-      bottom:20px;
-      width:64px;height:64px;border-radius:999px;
-      display:grid;place-items:center;
-      background:var(--accent-gradient);
-      color:#083344;font-weight:800;
-      border:0;box-shadow:0 8px 24px rgba(16,24,40,0.18);
-      cursor:pointer;
-    }
-    .fab:focus{outline:3px solid rgba(199,184,255,0.25)}
-    .fab:active{transform:translateY(2px)}
+  /* FAB */
+  .fab{
+    position:fixed;right:22px;bottom:22px;width:68px;height:68px;border-radius:999px;display:grid;place-items:center;
+    background:var(--accent-gradient);color:#fff;font-weight:800;border:0;box-shadow:0 18px 40px rgba(107,78,255,0.16);cursor:pointer;
+    transition:transform .12s ease, box-shadow .12s ease;
+  }
+  .fab:hover{transform:translateY(-4px);box-shadow:0 22px 60px rgba(107,78,255,0.18)}
+  .fab:active{transform:translateY(1px)}
+  .fab:focus{outline:3px solid rgba(107,78,255,0.18);outline-offset:3px}
 
-    /* Footer navigation */
-    footer.nav{
-      display:flex;
-      gap:12px;
-      justify-content:space-around;
-      align-items:center;
-      padding:10px 6px;
-      background:transparent;
-      border-radius:12px;
-      margin-top:6px;
-    }
-    .nav-btn{
-      display:flex;flex-direction:column;align-items:center;font-size:12px;color:var(--muted);
-      border:0;background:transparent;padding:8px;border-radius:10px;
-    }
-    .nav-btn[aria-current="true"]{color:#0f172a;font-weight:700}
-    .nav-btn:focus{outline:3px solid rgba(125,211,252,0.2)}
+  /* Footer nav */
+  footer.nav{
+    display:flex;gap:12px;justify-content:space-around;align-items:center;padding:10px 6px;margin-top:12px;
+    background:transparent;border-radius:12px;
+  }
+  .nav-btn{display:flex;flex-direction:column;align-items:center;font-size:12px;color:var(--muted);border:0;background:transparent;padding:8px;border-radius:10px}
+  .nav-btn[aria-current="true"]{color:var(--text);font-weight:700}
+  .nav-btn:focus{outline:3px solid rgba(125,211,252,0.18)}
 
-    /* Modal (accessible) */
-    .modal-backdrop{
-      position:fixed;inset:0;display:none;align-items:center;justify-content:center;
-      background:rgba(8,10,15,0.42); z-index:60;padding:20px;
-    }
-    .modal{
-      width:100%;max-width:560px;background:var(--card);border-radius:16px;padding:18px;box-shadow:var(--shadow);
-    }
-    .modal h2{margin:0 0 8px 0}
-    .form-row{display:flex;flex-direction:column;gap:8px;margin-top:10px}
-    label{font-size:0.85rem;color:var(--muted)}
-    input[type="text"], input[type="number"], input[type="date"], select, textarea{
-      padding:10px 12px;border-radius:10px;border:1px solid #e6e9ef;font-size:0.95rem;
-      background:transparent;
-    }
-    input:focus, select:focus, textarea:focus{outline:3px solid rgba(125,211,252,0.22)}
-    .modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:12px}
-    .btn{
-      padding:10px 12px;border-radius:10px;border:0;background:var(--glass);cursor:pointer;
-    }
-    .btn.primary{background:var(--accent-gradient); color:#042027;font-weight:700}
-    .btn.ghost{background:transparent;border:1px solid #e6e9ef}
+  /* Modal */
+  .modal-backdrop{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(2,6,23,0.5);z-index:60;padding:20px}
+  .modal{width:100%;max-width:560px;background:var(--card);border-radius:16px;padding:18px;box-shadow:var(--shadow-lg);border:1px solid rgba(15,23,42,0.04)}
+  .modal h2{margin:0 0 8px 0;font-size:1.15rem}
+  .form-row{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+  label{font-size:0.9rem;color:var(--muted)}
+  input[type="text"], input[type="number"], input[type="date"], select, textarea{
+    padding:12px;border-radius:10px;border:1px solid #e6e9ef;font-size:0.95rem;background:transparent;
+  }
+  input:focus, select:focus, textarea:focus{outline:3px solid rgba(107,78,255,0.12);outline-offset:2px}
+  .modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:12px}
+  .btn{padding:10px 14px;border-radius:10px;border:0;background:var(--glass);cursor:pointer;font-weight:600}
+  .btn.primary{background:var(--accent-gradient);color:#fff}
+  .btn.ghost{background:transparent;border:1px solid #e6e9ef;color:var(--text)}
 
-    /* small animation for list insertion */
-    .animate-in{
-      animation: slideFadeIn 420ms ease both;
-    }
-    @keyframes slideFadeIn{
-      from{opacity:0; transform:translateY(10px)}
-      to{opacity:1; transform:none}
-    }
+  /* subtle entry animation */
+  .animate-in{animation:slideFadeIn 420ms cubic-bezier(.2,.9,.3,1) both}
+  @keyframes slideFadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 
-    /* Desktop tweaks: two-column inside the central card */
-    @media(min-width:var(--bp-desktop)){
-      .left-col{display:flex;flex-direction:column;gap:18px}
-    }
+  /* responsive tweaks */
+  @media(max-width:980px){
+    body{padding:16px}
+    .avatar{width:40px;height:40px}
+    .budget-card{padding:14px}
+    .quick-card{min-width:130px}
+    .tx{padding:10px}
+    .fab{right:16px;bottom:16px;width:64px;height:64px}
+  }
+  @media(min-width:1200px){
+    .budget-amount{font-size:1.9rem}
+  }
 
-    /* small helpers */
-    .muted{color:var(--muted);font-size:0.85rem}
-    .small{font-size:0.82rem}
-    .green{color:var(--success)}
-    .red{color:var(--danger)}
-    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+  /* small utilities */
+  .muted{color:var(--muted);font-size:0.9rem}
+  .small{font-size:0.86rem}
+  .green{color:var(--success)}
+  .red{color:var(--danger)}
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
   </style>
+  <!-- ===== end stylesheet ===== -->
 </head>
 <body>
   <div class="app-wrap" id="appWrap">
@@ -561,9 +504,9 @@ This file is self-contained (HTML + CSS + vanilla JS). Open in a browser.
       const remaining = MONTHLY_BUDGET - totalExpenses;
       const savingsPct = MONTHLY_BUDGET > 0 ? Math.round(((MONTHLY_BUDGET - totalExpenses) / MONTHLY_BUDGET) * 100) : 0;
 
-      totalExpensesEl.textContent = toCurrency(totalExpenses);
-      remainingAmountEl.textContent = toCurrency(remaining);
-      savingsPercentEl.textContent = `${clamp(savingsPct, -999, 999)}%`;
+      if(totalExpensesEl) totalExpensesEl.textContent = toCurrency(totalExpenses);
+      if(remainingAmountEl) remainingAmountEl.textContent = toCurrency(remaining);
+      if(savingsPercentEl) savingsPercentEl.textContent = `${clamp(savingsPct, -999, 999)}%`;
     }
 
     function renderTransactions(){
@@ -631,8 +574,10 @@ This file is self-contained (HTML + CSS + vanilla JS). Open in a browser.
      *******************************************************/
     const CIRC_R = 40;
     const CIRC_C = 2 * Math.PI * CIRC_R;
-    progressStroke.setAttribute('stroke-dasharray', CIRC_C.toFixed(3));
-    progressStroke.setAttribute('stroke-dashoffset', CIRC_C.toFixed(3));
+    if(progressStroke){
+      progressStroke.setAttribute('stroke-dasharray', CIRC_C.toFixed(3));
+      progressStroke.setAttribute('stroke-dashoffset', CIRC_C.toFixed(3));
+    }
 
     function setProgress(percent){
       // clamp 0..100
@@ -640,25 +585,26 @@ This file is self-contained (HTML + CSS + vanilla JS). Open in a browser.
       // offset = circumference * (1 - p/100)
       const offset = CIRC_C * (1 - p / 100);
       // set color based on warning levels
-      let color = 'var(--accent-2)';
-      if(p >= 90) color = 'var(--danger)';
+      let color = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+      if(p >= 90) color = getComputedStyle(document.documentElement).getPropertyValue('--danger').trim();
       else if(p >= 70) color = 'orange';
-      else color = 'var(--accent-2)';
-      progressStroke.style.stroke = getComputedStyle(document.documentElement).getPropertyValue('--accent-2').trim();
-      // apply
-      requestAnimationFrame(()=> {
-        progressStroke.style.strokeDashoffset = offset.toFixed(3);
-      });
+      else color = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
 
-      // also update a small percent label (keep inside budget card)
-      // create or update label
+      if(progressStroke){
+        progressStroke.style.stroke = color || getComputedStyle(document.documentElement).getPropertyValue('--accent');
+        requestAnimationFrame(()=> {
+          progressStroke.style.strokeDashoffset = offset.toFixed(3);
+        });
+      }
+
+      // update percent label
       let el = document.getElementById('percentLabel');
       if(!el){
         el = document.createElement('div');
         el.id = 'percentLabel';
         el.className = 'percent-label';
-        const parent = progressStroke.closest('.budget-left');
-        parent.appendChild(el);
+        const parent = document.querySelector('.budget-left');
+        if(parent) parent.appendChild(el);
       }
       el.textContent = p + '%';
     }
@@ -741,7 +687,7 @@ This file is self-contained (HTML + CSS + vanilla JS). Open in a browser.
         color: pickColorForCategory(category)
       };
 
-      // insert into transactions (prepend)
+      // insert into transactions (append; list renders sorted)
       transactions.push(newTx);
 
       // persist & re-render
@@ -802,6 +748,7 @@ This file is self-contained (HTML + CSS + vanilla JS). Open in a browser.
       setTimeout(()=> {
         renderQuickStats();
         renderBudget(); // ensure progress sync
+        saveToStorage();
       }, 450);
     }
 
