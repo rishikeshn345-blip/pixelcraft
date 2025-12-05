@@ -1,0 +1,421 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Expense Tracker — Home</title>
+
+  <!-- ===== Embedded CSS ===== -->
+  <style>
+    :root{
+      --bg1:#071023;
+      --bg2:#0b0f1a;
+      --text:#e6eef8;
+      --muted:#94a3b8;
+      --accent:#7c3aed;
+      --glass: rgba(255,255,255,0.04);
+      --card: rgba(255,255,255,0.03);
+      --radius:12px;
+      --maxw:1200px;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{height:100%}
+    body{
+      background: linear-gradient(180deg,var(--bg1),var(--bg2));
+      color:var(--text);
+      font-family:Inter,system-ui,Segoe UI,Roboto,Arial;
+      -webkit-font-smoothing:antialiased;
+      overflow-x:hidden;
+    }
+
+    /* WebGL canvas behind content */
+    .webgl{
+      position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;
+    }
+
+    /* Top nav */
+    .topbar{
+      position:fixed;left:0;right:0;top:12px;display:flex;justify-content:center;z-index:60;
+      pointer-events:none;
+    }
+    .topbar .container{
+      width:100%;max-width:var(--maxw);display:flex;align-items:center;justify-content:space-between;padding:0 20px;pointer-events:auto;
+    }
+    .brand{display:flex;align-items:center;gap:12px}
+    .logo{
+      width:48px;height:48px;border-radius:10px;background:linear-gradient(135deg,#7c3aed,#8a66ff);
+      display:grid;place-items:center;font-weight:800;color:#fff;box-shadow:0 10px 30px rgba(124,58,237,0.16)
+    }
+    .brand span{display:block;font-weight:700}
+    .navlinks{display:flex;gap:12px;align-items:center}
+    .navlinks a{color:var(--muted);text-decoration:none;padding:8px 10px;border-radius:8px;font-weight:600}
+    .navlinks a:hover{color:var(--text);background:linear-gradient(90deg, rgba(124,58,237,0.08), rgba(138,102,255,0.05))}
+
+    /* hero */
+    .hero{position:relative;z-index:20;display:flex;align-items:flex-start;justify-content:center;padding:110px 20px 40px}
+    .hero .container{width:100%;max-width:var(--maxw);display:grid;grid-template-columns:1fr 380px;gap:28px;align-items:start}
+    @media(max-width:900px){ .hero .container{grid-template-columns:1fr} }
+
+    .hero-left{padding:18px;border-radius:12px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border:1px solid rgba(255,255,255,0.02)}
+    .eyebrow{color:var(--muted);font-size:14px;margin-bottom:10px}
+    .title-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+    .title{font-size:clamp(30px,4.6vw,48px);font-weight:800;line-height:1}
+    /* spinning rupee coin */
+    .coin{
+      width:48px;height:48px;border-radius:50%;display:grid;place-items:center;
+      background:linear-gradient(180deg,#ffd549,#ffb443);color:#6b3a18;font-weight:900;font-size:20px;
+      box-shadow:0 12px 30px rgba(255,180,60,0.12);
+      transform-style:preserve-3d; animation:spinCoin 2.2s linear infinite;
+    }
+    @keyframes spinCoin{
+      0%{transform:rotateY(0) rotateX(-8deg)}
+      100%{transform:rotateY(360deg) rotateX(-8deg)}
+    }
+    .lead{color:var(--muted);margin-top:12px;margin-bottom:18px}
+
+    .hero-actions{display:flex;gap:12px;margin-top:12px}
+    .btn{
+      padding:10px 14px;border-radius:10px;border:0;font-weight:700;cursor:pointer;color:white;background:linear-gradient(90deg,var(--accent),#8A66FF);
+      box-shadow:0 12px 34px rgba(124,58,237,0.16)
+    }
+    .btn.ghost{background:transparent;color:var(--muted);border:1px solid rgba(255,255,255,0.04)}
+
+    /* hero-right quick card */
+    .hero-right{display:flex;flex-direction:column;gap:12px}
+    .card{
+      background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border-radius:12px;padding:14px;border:1px solid rgba(255,255,255,0.02);
+    }
+    .stat{font-weight:800;font-size:22px}
+    .muted{color:var(--muted)}
+
+    /* sections */
+    .content{max-width:var(--maxw);margin:24px auto 120px;padding:0 20px;position:relative;z-index:20}
+    .section{background:transparent;padding:28px;border-radius:12px;margin-bottom:18px}
+    .grid{display:grid;gap:14px}
+    @media(min-width:900px){ .grid.cols-2{grid-template-columns:1fr 1fr} }
+
+    .projects-grid{display:grid;gap:14px}
+    @media(min-width:900px){ .projects-grid{grid-template-columns:repeat(2,1fr)} }
+    .card p{color:var(--muted);line-height:1.5}
+
+    /* contact form */
+    .contact-form{display:flex;flex-direction:column;gap:10px}
+    .contact-form input,.contact-form textarea{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:10px;border-radius:10px;color:var(--text)}
+    .contact-form .btn{width:max-content}
+
+    footer{text-align:center;color:var(--muted);padding:36px 20px 80px;z-index:10;position:relative}
+
+    /* modal */
+    .modal-backdrop{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(2,6,23,0.6);z-index:80;padding:12px}
+    .modal{width:100%;max-width:480px;background:linear-gradient(180deg,#0f1220,#0b0f1a);padding:18px;border-radius:12px;border:1px solid rgba(255,255,255,0.03)}
+    .modal h3{margin-bottom:8px}
+    .modal input{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);background:transparent;color:var(--text);margin-bottom:10px}
+
+    /* small util */
+    .right-align{display:flex;justify-content:flex-end}
+  </style>
+</head>
+<body>
+  <!-- Three.js canvas (background) -->
+  <canvas class="webgl"></canvas>
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="container">
+      <div class="brand">
+        <div class="logo">ET</div>
+        <div>
+          <span>Expense Tracker</span>
+          <div class="muted" style="font-size:12px">Student budgeting made simple</div>
+        </div>
+      </div>
+
+     
+    </div>
+  </div>
+
+  <!-- Hero -->
+  <header class="hero">
+    <div class="container">
+      <div class="hero-left">
+        <div class="eyebrow">Welcome</div>
+
+        <div class="title-row">
+          <h1 class="title">Expense Tracker</h1>
+
+          <!-- Spinning ₹ coin placed right after title -->
+          <div class="coin" title="Rupee coin">₹</div>
+        </div>
+
+        <p class="lead">A simple and student-friendly budgeting UI that helps students add & track expenses, set monthly budgets, view insights and create savings goals.</p>
+
+        <div class="hero-actions">
+         <a href="login.html"><button>Get started</button></a>
+          <button class="btn ghost" id="ctaDemo">Demo</button>
+        </div>
+      </div>
+
+      <aside class="hero-right">
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <div class="muted">Monthly Budget</div>
+              <div class="stat">₹ 12,000</div>
+            </div>
+            <div style="text-align:right">
+              <div class="muted">Spent</div>
+              <div class="stat">₹ 4,850</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="muted">Quick Tips</div>
+          <ul style="margin-top:8px;color:var(--muted);line-height:1.6">
+            <li>Track daily coffee & snacks to reduce small leaks.</li>
+            <li>Set a weekly limit to stay within monthly budget.</li>
+          </ul>
+        </div>
+      </aside>
+    </div>
+  </header>
+
+  <!-- Content -->
+  <main class="content">
+    <section id="projects" class="section">
+      <h2>How it works</h2>
+      <div class="projects-grid">
+        <div class="card">
+          <h3>Add & Track</h3>
+          <p>Quickly add expenses and incomes. View a clean list of transactions and see where your money goes.</p>
+        </div>
+        <div class="card">
+          <h3>Budgets</h3>
+          <p>Set monthly budgets for categories and get notified when you're close to limits.</p>
+        </div>
+        <div class="card">
+          <h3>Insights</h3>
+          <p>Visual charts show spending patterns and top categories so you can cut unnecessary costs.</p>
+        </div>
+        <div class="card">
+          <h3>Savings Goals</h3>
+          <p>Create goals, save towards them and watch your progress with motivating visuals.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="about" class="section">
+      <h2>About</h2>
+      <p class="muted">This is a frontend-only demo showing UI and animation ideas for a student budgeting app. Replace with real backend and auth for production.</p>
+    </section>
+
+    <section id="contact" class="section">
+      <h2>Help Desk</h2>
+      <div class="card contact-form">
+        <input placeholder="Your name" />
+        <input placeholder="Email" />
+        <textarea rows="4" placeholder="Message"></textarea>
+        <div class="right-align"><button class="btn">Send</button></div>
+      </div>
+    </section>
+
+    <footer>
+      <small>© NextGen Coders • Expense Tracker</small>
+    </footer>
+  </main>
+
+  <!-- Modal (login/register) -->
+  <div class="modal-backdrop" id="modalBackdrop" role="dialog" aria-modal="true" style="display:none">
+    <div class="modal" id="modalContent">
+      <h3 id="modalTitle">Login</h3>
+      <input id="mEmail" placeholder="Email" type="email" />
+      <input id="mPw" placeholder="Password" type="password" />
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px">
+        <button class="btn" id="modalSubmit">Sign in</button>
+        <button class="btn ghost" id="modalClose">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Embedded JS (Three.js + UI handlers + coin interaction) ===== -->
+  <script type="module">
+    // ---------- Three.js background (adapted from your script) ----------
+    import * as THREE from 'https://unpkg.com/three@0.152.2/build/three.module.js';
+
+    const canvas = document.querySelector('.webgl');
+    const scene = new THREE.Scene();
+
+    const sizes = { width: window.innerWidth, height: window.innerHeight };
+
+    const camera = new THREE.PerspectiveCamera(45, sizes.width / sizes.height, 0.1, 100);
+    camera.position.set(0, 0, 6);
+    scene.add(camera);
+
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+    renderer.setSize(sizes.width, sizes.height);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setClearColor(0x000000, 0);
+
+    scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+    const pointLight = new THREE.PointLight(0xffffff, 1);
+    pointLight.position.set(2, 3, 4);
+    scene.add(pointLight);
+
+    const torusG = new THREE.TorusGeometry(1.25, 0.4, 32, 64);
+    const torusM = new THREE.MeshStandardMaterial({ color: 0x7c3aed, metalness: 0.6, roughness: 0.2 });
+    const torus = new THREE.Mesh(torusG, torusM);
+    scene.add(torus);
+
+    let particles;
+    function createParticles() {
+      if (particles) scene.remove(particles);
+      const count = window.innerWidth < 520 ? 250 : 700;
+      const positions = new Float32Array(count * 3);
+      for (let i = 0; i < count; i++) {
+        const i3 = i * 3;
+        positions[i3] = (Math.random() - 0.5) * 20;
+        positions[i3 + 1] = (Math.random() - 0.5) * 12;
+        positions[i3 + 2] = (Math.random() - 0.5) * 8;
+      }
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      const mat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.03, opacity: 0.9, transparent: true });
+      particles = new THREE.Points(geometry, mat);
+      scene.add(particles);
+    }
+    createParticles();
+
+    let scrollY = window.scrollY;
+    window.addEventListener('scroll', () => scrollY = window.scrollY);
+
+    function cameraTarget() {
+      const sections = document.querySelectorAll('.section').length - 1;
+      const scrollFraction = scrollY / (document.body.scrollHeight - window.innerHeight || 1);
+      const yRange = window.innerWidth < 520 ? 1.8 : 2.2;
+      return {
+        y: -scrollFraction * (sections * yRange),
+        z: 6 - scrollFraction * (window.innerWidth < 520 ? 1.5 : 2.2)
+      };
+    }
+
+    const cursor = { x: 0, y: 0 };
+    window.addEventListener('mousemove', (e) => {
+      cursor.x = (e.clientX / sizes.width) - 0.5;
+      cursor.y = (e.clientY / sizes.height) - 0.5;
+    });
+
+    window.addEventListener('resize', () => {
+      sizes.width = window.innerWidth; sizes.height = window.innerHeight;
+      camera.aspect = sizes.width / sizes.height; camera.updateProjectionMatrix();
+      renderer.setSize(sizes.width, sizes.height);
+      createParticles();
+    });
+
+    const clock = new THREE.Clock();
+    function animate() {
+      const elapsed = clock.getElapsedTime();
+      torus.rotation.y = elapsed * 0.4;
+      torus.rotation.x = Math.sin(elapsed * 0.3) * 0.2;
+      if (particles) particles.rotation.y = elapsed * 0.02;
+
+      const target = cameraTarget();
+      camera.position.y += (target.y - camera.position.y) * 0.08;
+      camera.position.z += (target.z - camera.position.z) * 0.06;
+      const lookX = cursor.x * 0.4;
+      const lookY = -cursor.y * 0.4;
+      camera.lookAt(new THREE.Vector3(lookX, lookY, 0));
+      renderer.render(scene, camera);
+      requestAnimationFrame(animate);
+    }
+    animate();
+
+    // ---------- UI interactions (menu, smooth scroll, modal) ----------
+    const menuBtn = document.getElementById('menuBtn'); // (not included here, safe)
+    const navlinks = document.getElementById('navlinks');
+    // hamburger not used here; top links display on desktop
+
+    // smooth scroll for topbar links
+    document.querySelectorAll('.navlinks a').forEach(a => {
+      a.addEventListener('click', (e) => {
+        e.preventDefault();
+        const target = document.querySelector(a.getAttribute('href'));
+        if (target) target.scrollIntoView({ behavior: 'smooth' });
+      });
+    });
+
+    // Modal login/register logic
+    const loginBtnTop = document.getElementById('loginBtnTop');
+    const registerBtnTop = document.getElementById('registerBtnTop');
+    const modalBackdrop = document.getElementById('modalBackdrop');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalSubmit = document.getElementById('modalSubmit');
+    const modalClose = document.getElementById('modalClose');
+
+    function openModal(mode='login'){
+      modalBackdrop.style.display = 'flex';
+      modalTitle.textContent = mode === 'login' ? 'Login' : 'Register';
+      modalSubmit.textContent = mode === 'login' ? 'Sign in' : 'Create';
+    }
+    function closeModal(){ modalBackdrop.style.display = 'none'; }
+
+    loginBtnTop.addEventListener('click', ()=> openModal('login'));
+    registerBtnTop.addEventListener('click', ()=> openModal('register'));
+    document.getElementById('ctaLogin').addEventListener('click', ()=> openModal('register'));
+    modalClose.addEventListener('click', closeModal);
+    modalBackdrop.addEventListener('click', (e)=> { if (e.target === modalBackdrop) closeModal(); });
+
+    // demo submit (no backend)
+    modalSubmit.addEventListener('click', ()=>{
+      modalSubmit.disabled = true;
+      modalSubmit.textContent = 'Processing...';
+      setTimeout(()=> { modalSubmit.disabled = false; modalSubmit.textContent = (modalTitle.textContent === 'Login' ? 'Sign in' : 'Create'); closeModal(); alert('Demo: action completed'); }, 900);
+    });
+
+    // CTA Demo quick-fill behavior
+    document.getElementById('ctaDemo').addEventListener('click', ()=> alert('Demo: show dashboard (frontend only)'));
+
+    // ---------- Coin click interaction (optional) ----------
+    const coin = document.querySelector('.coin');
+    // small interaction: on click pop an animated coin (visual) and increment a demo saved counter in top-right card
+    let saved = 4850; // initial spent shown earlier; simulate savings increment elsewhere if needed
+    coin.addEventListener('click', ()=> {
+      // quick pop animation
+      coin.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.14)' }, { transform: 'scale(1)' }], { duration: 420, easing: 'cubic-bezier(.2,.9,.25,1)' });
+      // spawn a quick HTML coin that falls to right card (visual fun)
+      spawnFallingCoin();
+    });
+
+    function spawnFallingCoin(){
+      const el = document.createElement('div');
+      el.textContent = '₹';
+      el.style.position = 'fixed';
+      el.style.left = (document.querySelector('.title').getBoundingClientRect().right + 12) + 'px';
+      el.style.top = (document.querySelector('.title').getBoundingClientRect().top + 8) + 'px';
+      el.style.width = '34px'; el.style.height = '34px';
+      el.style.borderRadius = '50%';
+      el.style.display = 'grid'; el.style.placeItems = 'center';
+      el.style.background = 'linear-gradient(180deg,#ffd549,#ffb443)';
+      el.style.color = '#6b3a18';
+      el.style.zIndex = 200;
+      el.style.boxShadow = '0 12px 28px rgba(0,0,0,0.25)';
+      el.style.fontWeight = '800';
+      document.body.appendChild(el);
+
+      const target = document.querySelector('.hero-right .card .stat:nth-child(2)') || document.querySelector('.hero-right .card');
+      const targetRect = (document.querySelector('.hero-right') || document.querySelector('.hero-left')).getBoundingClientRect();
+      const endX = targetRect.right - 40;
+      const endY = targetRect.top + 30;
+      const dur = 900 + Math.random()*200;
+
+      el.animate([
+        { transform: 'translate(0,0) scale(1)', opacity:1 },
+        { transform: `translate(${endX - el.getBoundingClientRect().left}px, ${endY - el.getBoundingClientRect().top}px) scale(0.6)`, opacity: 0.95 }
+      ], { duration: dur, easing: 'cubic-bezier(.2,.9,.25,1)' });
+
+      setTimeout(()=> el.remove(), dur + 40);
+    }
+
+  </script>
+</body>
+</html>
