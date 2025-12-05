@@ -1,0 +1,397 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Budget — History & Insights</title>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+  <style>
+    :root{
+      --bg:#071023;
+      --card:#0f1624;
+      --muted:#94a3b8;
+      --text:#e6eef8;
+      --accent:#7c3aed;
+      --accent-2:#ffb443;
+      --success:#10b981;
+      --danger:#ef4444;
+      --glass: rgba(255,255,255,0.03);
+      --radius:12px;
+      --container:1100px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial;
+      background:linear-gradient(180deg,var(--bg), #071427);
+      color:var(--text);
+      -webkit-font-smoothing:antialiased;
+      padding:28px;
+    }
+
+    .wrap{max-width:var(--container);margin:0 auto}
+    header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px}
+    .brand{display:flex;gap:12px;align-items:center}
+    .logo{width:56px;height:56px;border-radius:12px;background:linear-gradient(135deg,var(--accent),#8A66FF);display:grid;place-items:center;font-weight:800}
+    h1{font-size:20px;margin:0}
+    .small{color:var(--muted);font-size:13px}
+
+    main{display:grid;grid-template-columns: 1fr 360px; gap:18px;}
+    @media(max-width:980px){ main{grid-template-columns:1fr} }
+
+    .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:16px;border-radius:12px;border:1px solid rgba(255,255,255,0.03)}
+    .chart-wrap{height:220px}
+    .controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+    input[type="search"], select, input[type="date"]{padding:8px 10px;border-radius:10px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:var(--text)}
+    .btn{padding:8px 12px;border-radius:8px;border:0;background:linear-gradient(90deg,var(--accent),#8A66FF);color:white;font-weight:700;cursor:pointer}
+    .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted)}
+
+    /* history table */
+    table{width:100%;border-collapse:collapse;font-size:14px}
+    thead th{color:var(--muted);text-align:left;padding:8px 10px;border-bottom:1px solid rgba(255,255,255,0.03)}
+    tbody td{padding:10px;border-bottom:1px solid rgba(255,255,255,0.02)}
+    .tx-amt{font-weight:800}
+    .positive{color:var(--success)}
+    .negative{color:var(--danger)}
+
+    /* right column cards */
+    .right{display:flex;flex-direction:column;gap:12px}
+    .small-card{padding:12px;border-radius:10px;background:rgba(255,255,255,0.01);border:1px solid rgba(255,255,255,0.02)}
+    .mini{font-size:13px;color:var(--muted)}
+    .stat{font-weight:800;font-size:18px}
+
+    footer{margin-top:18px;color:var(--muted);font-size:13px}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <div class="logo">ET</div>
+        <div>
+          <h1>History & Insights</h1>
+          <div class="small">Spending graph and full transaction history</div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:8px;align-items:center">
+        <a href="money.html" class="btn ghost" style="text-decoration:none;color:var(--text)">← Back to Budget</a>
+        <button id="btnExportJSON" class="btn ghost">Export JSON</button>
+        <button id="btnClear" class="btn ghost">Clear Data</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="card">
+        <div class="controls" aria-hidden="false">
+          <label class="mini" style="color:var(--muted)">Range:</label>
+          <select id="rangeSelect" title="Select range">
+            <option value="7">Last 7 days</option>
+            <option value="14">Last 14 days</option>
+            <option value="30" selected>Last 30 days</option>
+            <option value="90">Last 90 days</option>
+          </select>
+
+          <label class="mini" style="color:var(--muted)">Category:</label>
+          <select id="categoryFilter"><option value="">All</option></select>
+
+          <label class="mini" style="color:var(--muted)">Search:</label>
+          <input type="search" id="searchInput" placeholder="Search title or note" />
+
+          <label class="mini" style="color:var(--muted)">From:</label>
+          <input type="date" id="fromDate" />
+          <label class="mini" style="color:var(--muted)">To:</label>
+          <input type="date" id="toDate" />
+
+          <button id="btnApply" class="btn ghost">Apply</button>
+          <button id="btnReset" class="btn">Reset</button>
+        </div>
+
+        <div class="chart-wrap card" style="padding:10px">
+          <canvas id="spendChart"></canvas>
+        </div>
+
+        <div style="margin-top:12px">
+          <h3 style="margin:6px 0;color:var(--muted)">Transaction History</h3>
+          <div style="overflow:auto;max-height:420px">
+            <table id="historyTable" aria-live="polite">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Title</th>
+                  <th>Category</th>
+                  <th style="text-align:right">Amount</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <aside class="right">
+        <div class="small-card">
+          <div class="mini">Quick totals</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px">
+            <div><div class="mini">Balance</div><div class="stat" id="statBalance">₹0</div></div>
+            <div><div class="mini">This month</div><div class="stat" id="statMonth">₹0</div></div>
+          </div>
+        </div>
+
+        <div class="small-card">
+          <div class="mini">Category breakdown</div>
+          <div id="catBreak" style="margin-top:10px;display:flex;flex-direction:column;gap:8px"></div>
+        </div>
+
+        <div class="small-card">
+          <div class="mini">Actions</div>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">
+            <button id="btnExportCSV" class="btn ghost">Export CSV</button>
+            <button id="btnDownloadChart" class="btn">Download Chart</button>
+          </div>
+        </div>
+      </aside>
+    </main>
+
+    <footer>Hint: Add transactions from your Budget page. This page reads the same stored data (localStorage).</footer>
+  </div>
+
+  <script>
+    // HISTORY & INSIGHTS PAGE
+    const STORAGE_KEY = 'budget_state_v1'; // same key as your budget page
+    let state = loadState();
+
+    // DOM refs
+    const rangeSelect = document.getElementById('rangeSelect');
+    const categoryFilter = document.getElementById('categoryFilter');
+    const searchInput = document.getElementById('searchInput');
+    const fromDate = document.getElementById('fromDate');
+    const toDate = document.getElementById('toDate');
+    const btnApply = document.getElementById('btnApply');
+    const btnReset = document.getElementById('btnReset');
+    const historyTbody = document.querySelector('#historyTable tbody');
+    const statBalance = document.getElementById('statBalance');
+    const statMonth = document.getElementById('statMonth');
+    const catBreak = document.getElementById('catBreak');
+    const btnExportJSON = document.getElementById('btnExportJSON');
+    const btnClear = document.getElementById('btnClear');
+    const btnExportCSV = document.getElementById('btnExportCSV');
+    const btnDownloadChart = document.getElementById('btnDownloadChart');
+
+    // Chart
+    const ctx = document.getElementById('spendChart').getContext('2d');
+    let spendChart = null;
+
+    function loadState(){
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          // ensure arrays exist
+          parsed.transactions = parsed.transactions || [];
+          parsed.budgets = parsed.budgets || [];
+          parsed.goals = parsed.goals || [];
+          return parsed;
+        }
+      } catch(e) { /* ignore */ }
+      // empty default
+      return { totalBalance: 0, transactions: [], budgets: [], goals: [] };
+    }
+
+    // Utility
+    function fmt(n){ return '₹' + Number(n).toLocaleString('en-IN', {maximumFractionDigits:2}); }
+    function parseISO(d){ if(!d) return null; return new Date(d); }
+    function todayISO(){ return new Date().toISOString().slice(0,10); }
+    function monthKey(date){ const d = new Date(date); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'); }
+
+    // Populate category filter from state.categories or deduce
+    function buildCategoryList(){
+      const cats = new Set();
+      if(Array.isArray(state.categories)) state.categories.forEach(c=>cats.add(c));
+      state.transactions.forEach(t => { if(t.category) cats.add(t.category); });
+      categoryFilter.innerHTML = '<option value="">All</option>';
+      Array.from(cats).sort().forEach(c => {
+        const opt = document.createElement('option'); opt.value = c; opt.textContent = c;
+        categoryFilter.appendChild(opt);
+      });
+    }
+
+    // Filter transactions according to UI
+    function getFilteredTransactions(){
+      let txs = Array.isArray(state.transactions) ? state.transactions.slice() : [];
+      // date filters
+      const from = fromDate.value ? new Date(fromDate.value) : null;
+      const to = toDate.value ? new Date(toDate.value) : null;
+      if(from) from.setHours(0,0,0,0);
+      if(to) to.setHours(23,59,59,999);
+      txs = txs.filter(t => {
+        const d = parseISO(t.date);
+        if(from && d < from) return false;
+        if(to && d > to) return false;
+        return true;
+      });
+      // category filter
+      if(categoryFilter.value) txs = txs.filter(t => (t.category || '') === categoryFilter.value);
+      // search
+      const q = (searchInput.value || '').trim().toLowerCase();
+      if(q) txs = txs.filter(t => ((t.title||'') + ' ' + (t.note||'') + ' ' + (t.category||'')).toLowerCase().includes(q));
+      return txs.sort((a,b) => new Date(b.date) - new Date(a.date));
+    }
+
+    // Render history table
+    function renderHistory(){
+      const txs = getFilteredTransactions();
+      historyTbody.innerHTML = '';
+      if(txs.length === 0){
+        const tr = document.createElement('tr'); const td = document.createElement('td'); td.colSpan=4; td.style.color='var(--muted)'; td.textContent = 'No transactions in selection'; tr.appendChild(td); historyTbody.appendChild(tr);
+        return;
+      }
+      txs.forEach(t => {
+        const tr = document.createElement('tr');
+        const dateTd = document.createElement('td'); dateTd.textContent = t.date || '';
+        const titleTd = document.createElement('td'); titleTd.textContent = t.title || '';
+        const catTd = document.createElement('td'); catTd.textContent = t.category || '';
+        const amtTd = document.createElement('td'); amtTd.style.textAlign='right'; amtTd.className='tx-amt ' + (t.amount < 0 ? 'negative' : 'positive'); amtTd.textContent = (t.amount < 0 ? '-' : '+') + fmt(Math.abs(t.amount));
+        tr.appendChild(dateTd); tr.appendChild(titleTd); tr.appendChild(catTd); tr.appendChild(amtTd);
+        historyTbody.appendChild(tr);
+      });
+    }
+
+    // Aggregate for chart (daily sums for last N days)
+    function buildSeries(days){
+      const end = new Date(); end.setHours(23,59,59,999);
+      const start = new Date(); start.setDate(end.getDate() - (days-1)); start.setHours(0,0,0,0);
+      const labels = [];
+      const values = [];
+      for(let i=0;i<days;i++){
+        const d = new Date(start); d.setDate(start.getDate() + i);
+        const dayKey = d.toISOString().slice(0,10);
+        labels.push(d.toLocaleDateString(undefined, {month:'short', day:'numeric'}));
+        const sum = state.transactions.filter(tx => tx.date === dayKey && tx.amount < 0).reduce((s,tx) => s + Math.abs(Number(tx.amount)), 0);
+        values.push(sum);
+      }
+      return { labels, values, start, end };
+    }
+
+    // Render chart
+    function renderChart(){
+      const days = Number(rangeSelect.value) || 30;
+      const series = buildSeries(days);
+      if(spendChart) spendChart.destroy();
+      const gradient = ctx.createLinearGradient(0,0,0,240);
+      gradient.addColorStop(0,'rgba(124,58,237,0.28)');
+      gradient.addColorStop(1,'rgba(124,58,237,0.04)');
+      spendChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: series.labels,
+          datasets: [{
+            label: 'Daily spend',
+            data: series.values,
+            fill: true,
+            backgroundColor: gradient,
+            borderColor: '#8A66FF',
+            tension: 0.36,
+            pointRadius: 0,
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend:{display:false} },
+          scales: { x:{grid:{display:false}}, y:{display:true, ticks:{color:'#9aa0b4'}} }
+        }
+      });
+    }
+
+    // Render side stats and category breakdown
+    function renderStats(){
+      const balance = (state.totalBalance || 0) + state.transactions.reduce((s,t)=>s + Number(t.amount),0);
+      statBalance.textContent = fmt(balance);
+      // this month sum
+      const now = new Date(); const curMonth = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0');
+      const monthSum = state.transactions.filter(t => monthKey(t.date) === curMonth).reduce((s,t)=>s + Number(t.amount),0);
+      statMonth.textContent = fmt(monthSum);
+      // category breakdown
+      const map = {};
+      state.transactions.forEach(t => { const c = t.category || 'Uncategorized'; map[c] = (map[c]||0) + Number(t.amount); });
+      catBreak.innerHTML = '';
+      Object.keys(map).sort((a,b)=> Math.abs(map[b]) - Math.abs(map[a])).slice(0,8).forEach(c=>{
+        const v = map[c];
+        const row = document.createElement('div');
+        row.style.display='flex'; row.style.justifyContent='space-between'; row.style.alignItems='center';
+        row.innerHTML = `<div style="color:var(--muted)">${c}</div><div style="font-weight:700">${fmt(Math.abs(v))}</div>`;
+        catBreak.appendChild(row);
+      });
+    }
+
+    // Export JSON
+    btnExportJSON.addEventListener('click', ()=>{
+      const data = JSON.stringify(state, null, 2);
+      const blob = new Blob([data], {type:'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = 'budget-export.json'; a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    // Export CSV (transactions)
+    btnExportCSV.addEventListener('click', ()=>{
+      const rows = [['id','date','title','category','amount','note']];
+      state.transactions.forEach(t => rows.push([t.id || '', t.date || '', (t.title||'').replace(/"/g,'""'), (t.category||''), t.amount, (t.note||'').replace(/"/g,'""')]));
+      const csv = rows.map(r=> r.map(cell => `"${String(cell||'')}"`).join(',')).join('\n');
+      const blob = new Blob([csv], {type:'text/csv'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = 'transactions.csv'; a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    // Download chart as PNG
+    btnDownloadChart.addEventListener('click', ()=>{
+      if(!spendChart) return;
+      const url = document.getElementById('spendChart').toDataURL('image/png');
+      const a = document.createElement('a'); a.href = url; a.download = 'spending-chart.png'; a.click();
+    });
+
+    // Clear data
+    btnClear.addEventListener('click', ()=>{
+      if(!confirm('Clear ALL stored budget data (this cannot be undone)?')) return;
+      localStorage.removeItem(STORAGE_KEY);
+      state = loadState(); // reload empty
+      buildCategoryList(); renderChart(); renderHistory(); renderStats();
+    });
+
+    // Apply/Reset filters
+    btnApply.addEventListener('click', ()=>{
+      renderHistory();
+    });
+    btnReset.addEventListener('click', ()=>{
+      categoryFilter.value = '';
+      searchInput.value = '';
+      fromDate.value = '';
+      toDate.value = '';
+      rangeSelect.value = '30';
+      renderAll();
+    });
+
+    function renderAll(){
+      state = loadState();
+      buildCategoryList();
+      renderChart();
+      renderHistory();
+      renderStats();
+    }
+
+    // initialize
+    buildCategoryList();
+    renderAll();
+
+    // Re-render chart on resize/orientation
+    let t;
+    window.addEventListener('resize', ()=> { clearTimeout(t); t=setTimeout(renderChart, 150); }, {passive:true});
+  </script>
+</body>
+</html>
