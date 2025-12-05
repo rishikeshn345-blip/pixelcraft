@@ -1,0 +1,503 @@
+<!-- Save as index.html and open in a browser (responsive for phones/tablets/desktops) -->
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>PixelCraft — Responsive Student Budget Dashboard</title>
+
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+  <style>
+    :root{
+      --bg: #F6F7FB;
+      --card: #FFFFFF;
+      --primary: #6B4EFF;
+      --accent: #FFB443;
+      --success: #3DDC84;
+      --muted: #7B7F9A;
+      --glass: rgba(255,255,255,0.6);
+      --radius: 14px;
+      --shadow-lg: 0 18px 40px rgba(99,85,255,0.10);
+      --shadow-soft: 0 8px 20px rgba(27,31,69,0.06);
+      --max-width: 1100px;
+      --gap: clamp(12px, 2vw, 24px);
+      --pad: clamp(12px, 2.2vw, 28px);
+      --text-sm: clamp(12px, 1.6vw, 14px);
+      --text-base: clamp(15px, 1.9vw, 16px);
+      --text-lg: clamp(18px, 2.4vw, 20px);
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background: linear-gradient(180deg,#F6F7FB 0%, #F2F5FF 100%);
+      color:#12121a;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      padding:var(--pad);
+      -webkit-tap-highlight-color: transparent;
+      line-height:1.35;
+    }
+
+    /* Layout container */
+    .outer{
+      max-width: var(--max-width);
+      margin: 0 auto;
+    }
+
+    .container{
+      display:grid;
+      grid-template-columns: 1fr 360px;
+      gap:var(--gap);
+      align-items:start;
+    }
+
+    /* Header */
+    header{
+      grid-column:1/-1;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:6px;
+      gap:12px;
+    }
+    .greeting{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      min-width:0;
+    }
+    .greeting h1{margin:0;font-size:var(--text-lg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .greeting p{margin:0;color:var(--muted);font-size:var(--text-sm)}
+    .avatar-3d{
+      width:clamp(44px,6vw,56px);height:clamp(44px,6vw,56px);border-radius:12px;
+      background:linear-gradient(135deg,#fff 0%, #f6f7ff 100%);
+      box-shadow: var(--shadow-lg);
+      display:flex;align-items:center;justify-content:center;
+      transform-style:preserve-3d; perspective:800px;
+      flex-shrink:0;
+    }
+    .avatar-3d .face{
+      width:clamp(34px,5vw,44px);height:clamp(34px,5vw,44px);border-radius:10px;
+      background:linear-gradient(180deg,#ffe6a8,#ffd080);
+      transform: rotateX(8deg) rotateY(-10deg) translateZ(6px);
+      display:flex;align-items:center;justify-content:center;font-weight:700;
+      color:#3c2d6b;
+      box-shadow: 0 6px 14px rgba(107,78,255,0.12);
+      font-size:clamp(12px,2vw,16px);
+    }
+
+    /* Main column */
+    .main{
+      display:flex;flex-direction:column;gap:var(--gap);
+    }
+
+    /* Balance card */
+    .balance-card{
+      background:linear-gradient(180deg, rgba(255,255,255,0.92), rgba(255,255,255,0.98));
+      border-radius:var(--radius);
+      padding: clamp(14px,2.4vw,20px);
+      box-shadow:var(--shadow-lg);
+      display:flex;
+      gap:16px;
+      align-items:center;
+      position:relative;
+      overflow:visible;
+      min-height:88px;
+    }
+    .balance-left{flex:1;min-width:0}
+    .small-label{font-size:var(--text-sm);color:var(--muted);margin:0 0 6px 0}
+    .big-amount{font-size:clamp(20px,3.2vw,28px);margin:0 0 8px 0;font-weight:700}
+    .progress{
+      height:12px;background:#EEF1FF;border-radius:999px;overflow:hidden;width:min(48vw,260px);
+      box-shadow:var(--shadow-soft) inset;
+    }
+    .progress > i{display:block;height:100%;background:linear-gradient(90deg,var(--primary),#8A66FF);width:72%}
+
+    /* 3D coin */
+    .coin-wrap{
+      width:clamp(86px,10vw,120px);height:clamp(86px,10vw,120px);
+      display:flex;align-items:center;justify-content:center;
+      perspective:900px;flex-shrink:0;
+    }
+    .coin{
+      width:clamp(52px,6.4vw,72px);height:clamp(52px,6.4vw,72px);border-radius:50%;
+      background:linear-gradient(135deg,#FFD549,#FFB443);
+      display:flex;align-items:center;justify-content:center;
+      font-weight:800;color:#7A4025;
+      transform-style:preserve-3d;
+      animation: spin 5s linear infinite;
+      box-shadow: 0 14px 34px rgba(255,180,60,0.14), 0 6px 14px rgba(0,0,0,0.06);
+      border:6px solid rgba(255,255,255,0.12);
+      position:relative;
+    }
+    .coin::after{
+      content:"₹";position:absolute;font-size:clamp(14px,2vw,22px);transform:translateZ(10px);
+    }
+    @keyframes spin{
+      0%{transform: rotateY(0) rotateX(-6deg)}
+      100%{transform: rotateY(360deg) rotateX(-6deg)}
+    }
+
+    /* Mini cards row */
+    .mini-row{display:flex;gap:12px;flex-wrap:wrap}
+    .mini-card{
+      flex:1 1 120px;
+      background:var(--card);
+      border-radius:12px;padding:12px;
+      box-shadow:var(--shadow-soft);display:flex;gap:12px;align-items:center;
+      min-width:0;
+    }
+    .mini-icon{
+      width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,#fff,#f6f7ff);
+      display:grid;place-items:center;font-weight:700;color:var(--primary);box-shadow:0 8px 18px rgba(107,78,255,0.06);
+      flex-shrink:0;
+      font-size:18px;
+    }
+    .mini-body{font-size:var(--text-sm);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .mini-value{font-weight:700;font-size:var(--text-base)}
+
+    /* Insights chart */
+    .insights{
+      background:var(--card);border-radius:12px;padding:12px;box-shadow:var(--shadow-soft);
+    }
+    .insights h3{margin:0 0 8px 0;font-size:var(--text-base)}
+    .chart-wrap{height:120px;padding:6px}
+
+    /* Transactions list */
+    .transactions{
+      background:linear-gradient(180deg, rgba(255,255,255,0.9),#fff);
+      border-radius:12px;padding:12px;box-shadow:var(--shadow-soft);
+    }
+    .transactions h3{margin:0 0 10px 0;font-size:var(--text-base)}
+    .tx-list{display:flex;flex-direction:column;gap:8px}
+    .tx{
+      display:flex;justify-content:space-between;align-items:center;padding:8px;border-radius:10px;
+      transition:transform .18s ease;
+    }
+    .tx:active, .tx:hover{transform:translateY(-4px)}
+    .tx-left{display:flex;gap:12px;align-items:center;min-width:0}
+    .cat-icon{
+      width:44px;height:44px;border-radius:10px;background:#fff;display:grid;place-items:center;font-size:18px;
+      box-shadow: 0 8px 20px rgba(21,24,60,0.04);flex-shrink:0;
+    }
+    .tx-meta{display:flex;flex-direction:column;min-width:0}
+    .tx-meta div:first-child{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .tx-amt{font-weight:700;white-space:nowrap}
+
+    /* Right column (widgets) */
+    .right{
+      display:flex;flex-direction:column;gap:var(--gap);
+      position:relative;
+    }
+    .goals-card{
+      background:linear-gradient(180deg,#fff,#fbfbff);
+      border-radius:12px;padding:14px;box-shadow:var(--shadow-soft);
+    }
+    .goal-bar{height:12px;background:#F1F6F8;border-radius:999px;overflow:hidden;margin-top:8px}
+    .goal-bar > i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),#ff9f3b);width:40%}
+
+    /* Floating add button */
+    .add-btn{
+      position:fixed;left:50%;transform:translateX(-50%);bottom:22px;
+      width:min(92px,14vw);height:min(92px,14vw);border-radius:999px;background:linear-gradient(180deg,#fff,#FFF7EC);
+      display:grid;place-items:center;font-size:34px;color:var(--primary);
+      box-shadow: 0 22px 50px rgba(107,78,255,0.14);
+      border: 6px solid rgba(255,255,255,0.6);
+      cursor:pointer;
+      transition:transform .15s ease, box-shadow .15s ease;
+      z-index:60;
+      touch-action:manipulation;
+    }
+    .add-btn:active{transform:translateX(-50%) scale(.96)}
+    .add-inner{
+      width:66%;height:66%;border-radius:999px;background:linear-gradient(180deg,var(--primary),#8A66FF);
+      color:white;display:grid;place-items:center;font-weight:700;box-shadow:0 10px 24px rgba(107,78,255,0.18);
+      transform-style:preserve-3d; perspective:900px; animation: floaty 3s ease-in-out infinite;
+      font-size:clamp(18px,4vw,28px);
+    }
+    @keyframes floaty{
+      0%{transform:translateY(0)}
+      50%{transform:translateY(-8px)}
+      100%{transform:translateY(0)}
+    }
+
+    /* Responsive breakpoints */
+    @media (max-width:1100px){
+      .container{grid-template-columns: 1fr 320px}
+    }
+    @media (max-width:900px){
+      .container{grid-template-columns: 1fr; gap:16px}
+      .right{order:2}
+      .main{order:1}
+      header{flex-direction:row;align-items:center;justify-content:space-between}
+      .add-btn{left:86%;transform:translateX(0)}
+      .chart-wrap{height:140px}
+    }
+    @media (max-width:520px){
+      body{padding:14px}
+      .balance-card{flex-direction:row;gap:10px;padding:12px;min-height:72px}
+      .coin-wrap{width:74px;height:74px}
+      .coin{border:5px solid rgba(255,255,255,0.12)}
+      .mini-card{padding:10px}
+      .transactions{padding:10px}
+      .insights{padding:10px}
+      .avatar-3d{display:flex;align-items:center;justify-content:center}
+      .greeting h1{font-size:16px}
+      .add-btn{width:74px;height:74px;left:78%;transform:translateX(0);bottom:18px}
+      .chart-wrap{height:120px}
+    }
+
+    /* Accessibility - respect reduced motion */
+    @media (prefers-reduced-motion: reduce){
+      .coin, .add-inner{animation:none !important}
+      *{transition:none !important}
+    }
+
+    /* small utilities */
+    a{color:var(--primary);text-decoration:none}
+    button{font-family:inherit}
+  </style>
+</head>
+<body>
+  <div class="outer">
+    <div class="container" role="main" aria-label="Student budgeting dashboard">
+      <header>
+        <div class="greeting" style="min-width:0">
+          <div style="min-width:0">
+            <h1 title="Welcome">Hi, Vinay 👋</h1>
+            <p>Track your expenses and stay on budget!</p>
+          </div>
+        </div>
+        <div class="avatar-3d" title="Student avatar">
+          <div class="face">VM</div>
+        </div>
+      </header>
+
+      <main class="main" aria-live="polite">
+        <!-- Balance Card -->
+        <section class="balance-card" aria-label="Total balance">
+          <div class="balance-left">
+            <p class="small-label">Total Balance</p>
+            <p class="big-amount" id="totalBalance">₹12,450.00</p>
+            <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+              <div class="progress" aria-hidden="true"><i></i></div>
+              <div style="font-size:var(--text-sm);color:var(--muted)">75% used</div>
+            </div>
+            <p style="margin-top:10px;color:var(--muted);font-size:var(--text-sm)">You're close to hitting your limit! Stay mindful today.</p>
+          </div>
+
+          <!-- 3D coin -->
+          <div class="coin-wrap" aria-hidden="true">
+            <div class="coin" title="Rotating coin"></div>
+          </div>
+        </section>
+
+        <!-- Mini cards -->
+        <section class="mini-row" aria-label="Overview">
+          <div class="mini-card">
+            <div class="mini-icon" aria-hidden="true">🍽️</div>
+            <div style="min-width:0">
+              <div class="mini-body">Spent Today</div>
+              <div class="mini-value" id="spentToday">₹520</div>
+            </div>
+          </div>
+          <div class="mini-card">
+            <div class="mini-icon" aria-hidden="true">📅</div>
+            <div style="min-width:0">
+              <div class="mini-body">This Month</div>
+              <div class="mini-value" id="thisMonth">₹8,900</div>
+            </div>
+          </div>
+          <div class="mini-card">
+            <div class="mini-icon" aria-hidden="true">💰</div>
+            <div style="min-width:0">
+              <div class="mini-body">Remaining</div>
+              <div class="mini-value" id="remaining">₹3,550</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Insights + transactions -->
+        <section style="display:grid;grid-template-columns:1fr;gap:12px">
+          <div class="insights" aria-label="Spending trend">
+            <h3>📈 Spending Trend (Last 7 days)</h3>
+            <div class="chart-wrap">
+              <canvas id="trendChart" aria-label="Spending trend chart"></canvas>
+            </div>
+            <div style="margin-top:6px;text-align:right">
+              <a href="#" style="font-weight:600;font-size:var(--text-sm)">View Full Insights →</a>
+            </div>
+          </div>
+
+          <div class="transactions" aria-label="Recent transactions">
+            <h3>🧾 Recent Transactions</h3>
+            <div class="tx-list" id="txList" role="list">
+              <!-- transactions will be injected here -->
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <!-- Right column -->
+      <aside class="right" aria-label="Side widgets">
+        <div class="goals-card" aria-label="Savings goal widget">
+          <h3>🎯 Savings Goal</h3>
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <div style="font-weight:700">Trip Fund</div>
+              <div style="font-size:var(--text-sm);color:var(--muted)">Saved: ₹5,200 / ₹12,000</div>
+            </div>
+            <div style="font-weight:700;color:var(--primary);font-size:var(--text-base)">43%</div>
+          </div>
+          <div class="goal-bar" role="progressbar" aria-valuenow="43" aria-valuemin="0" aria-valuemax="100">
+            <i style="width:43%"></i>
+          </div>
+          <p style="margin-top:10px;color:var(--muted);font-size:var(--text-sm)">Keep going — ₹6,800 left to reach your goal.</p>
+        </div>
+
+        <div class="goals-card" aria-label="Quick budgeting tips">
+          <h3>Quick Tips</h3>
+          <ul style="margin:8px 0 0 18px;color:var(--muted);font-size:var(--text-sm)">
+            <li>Try a small weekly meal plan to cut food costs.</li>
+            <li>Use public transport passes — cheaper long-term.</li>
+            <li>Pause subscriptions you don't use.</li>
+          </ul>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <!-- Floating Add Button -->
+  <button class="add-btn" title="Add expense" aria-label="Add expense" onclick="onAddClick()">
+    <div class="add-inner" aria-hidden="true">+</div>
+  </button>
+
+  <script>
+    // Sample data
+    const sample = {
+      totalBalance: 12450.00,
+      spentToday: 520,
+      thisMonth: 8900,
+      remaining: 3550,
+      tx: [
+        {icon:"🍔", title:"McDonalds", amount:-180, category:"Food"},
+        {icon:"🚌", title:"Bus Pass", amount:-60, category:"Travel"},
+        {icon:"🎓", title:"Lab Record", amount:-150, category:"College"},
+        {icon:"☕", title:"Café Latte", amount:-110, category:"Snacks"}
+      ],
+      trend: [420, 600, 520, 460, 900, 300, 620]
+    };
+
+    // Populate numbers
+    const totalBalanceEl = document.getElementById('totalBalance');
+    const spentTodayEl = document.getElementById('spentToday');
+    const thisMonthEl = document.getElementById('thisMonth');
+    const remainingEl = document.getElementById('remaining');
+
+    totalBalanceEl.textContent = `₹${sample.totalBalance.toLocaleString()}.00`;
+    spentTodayEl.textContent = `₹${sample.spentToday}`;
+    thisMonthEl.textContent = `₹${sample.thisMonth}`;
+    remainingEl.textContent = `₹${sample.remaining}`;
+
+    // Transactions rendering (accessible)
+    const txList = document.getElementById('txList');
+    sample.tx.forEach((t, idx)=>{
+      const el = document.createElement('div');
+      el.className = 'tx';
+      el.setAttribute('role','listitem');
+      el.innerHTML = `
+        <div class="tx-left">
+          <div class="cat-icon" aria-hidden="true">${t.icon}</div>
+          <div class="tx-meta">
+            <div>${t.title}</div>
+            <div style="font-size:var(--text-sm);color:var(--muted)">${t.category} — Today</div>
+          </div>
+        </div>
+        <div class="tx-amt" style="color:${t.amount<0? '#FF5C5C':'#3DDC84'}">${t.amount<0? '-₹'+Math.abs(t.amount): '₹'+t.amount}</div>
+      `;
+      txList.appendChild(el);
+    });
+
+    // Chart.js - responsive trend chart
+    const ctx = document.getElementById('trendChart').getContext('2d');
+
+    function createTrendChart(){
+      // Destroy existing chart if present
+      if(window._trendChartInstance){
+        window._trendChartInstance.destroy();
+      }
+      const gradient = ctx.createLinearGradient(0,0,0,240);
+      gradient.addColorStop(0, 'rgba(107,78,255,0.28)');
+      gradient.addColorStop(1, 'rgba(107,78,255,0.04)');
+
+      window._trendChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],
+          datasets: [{
+            label: 'Spent',
+            data: sample.trend,
+            fill: true,
+            backgroundColor: gradient,
+            borderColor: '#6B4EFF',
+            tension: 0.36,
+            pointRadius: 0,
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { display:false }, ticks:{color:'#9aa0b4'} },
+            y: { display:false }
+          },
+          interaction: { intersect: false }
+        }
+      });
+    }
+
+    // Create chart on load
+    createTrendChart();
+
+    // Recreate chart on orientation change / resize for reliability on mobile browsers
+    let resizeTimeout;
+    window.addEventListener('resize', ()=>{
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(()=> {
+        createTrendChart();
+      }, 120);
+    }, {passive:true});
+
+    window.addEventListener('orientationchange', ()=> {
+      setTimeout(createTrendChart, 200);
+    }, {passive:true});
+
+    // Add button handler (demo)
+    function onAddClick(){
+      // On mobile you might navigate to add-expense page. For demo we use prompt.
+      const amt = prompt("Enter expense amount (₹):");
+      if(!amt) return;
+      alert("This is a UI demo. Implement_add_expense_flow to persist data.");
+    }
+
+    // Touch enhancements: increase click area for small screens
+    (function touchEnhance(){
+      const btn = document.querySelector('.add-btn');
+      if(window.matchMedia('(max-width:520px)').matches){
+        btn.style.width = '78px';
+        btn.style.height = '78px';
+      }
+    })();
+  </script>
+</body>
+</html>
